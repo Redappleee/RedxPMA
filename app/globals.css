@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Satoshi", "Avenir Next", "Nunito Sans", "Segoe UI", sans-serif;
+  --background: 212 38% 97%;
+  --foreground: 225 25% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 225 25% 11%;
+  --primary: 222 92% 56%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 218 35% 92%;
+  --muted-foreground: 223 10% 42%;
+  --border: 220 26% 88%;
+  --ring: 222 92% 56%;
+  --success: 159 73% 35%;
+  --warning: 33 90% 54%;
+  --danger: 0 78% 59%;
+}
+
+.dark {
+  --background: 223 35% 8%;
+  --foreground: 210 40% 96%;
+  --card: 226 30% 13%;
+  --card-foreground: 210 40% 96%;
+  --primary: 213 92% 63%;
+  --primary-foreground: 223 35% 8%;
+  --muted: 224 24% 20%;
+  --muted-foreground: 215 20% 70%;
+  --border: 224 24% 24%;
+  --ring: 213 92% 63%;
+  --success: 156 62% 40%;
+  --warning: 35 89% 59%;
+  --danger: 0 85% 63%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  font-feature-settings: "ss01" 1, "ss02" 1;
+}
+
+.noise-overlay {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+.glass {
+  @apply border border-white/10 bg-white/60 shadow-soft backdrop-blur-xl dark:bg-slate-900/45;
+}

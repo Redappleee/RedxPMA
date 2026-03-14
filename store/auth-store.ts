@@ -1,0 +1,32 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+import { IUser } from "@/types";
+
+interface AuthState {
+  user: IUser | null;
+  token: string | null;
+  hydrated: boolean;
+  setAuth: (user: IUser, token?: string | null) => void;
+  clearAuth: () => void;
+  setHydrated: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      hydrated: false,
+      setAuth: (user, token) => set({ user, token: token ?? null }),
+      clearAuth: () => set({ user: null, token: null }),
+      setHydrated: () => set({ hydrated: true })
+    }),
+    {
+      name: "nexuspm-auth",
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      }
+    }
+  )
+);
