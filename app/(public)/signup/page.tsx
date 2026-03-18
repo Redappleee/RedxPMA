@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { GoogleAuthProvider } from "@/components/auth/google-auth-provider";
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/ui/button";
@@ -92,7 +93,9 @@ export default function SignupPage() {
         or continue with
         <span className="h-px flex-1 bg-border" />
       </div>
-      <GoogleAuthButton role={form.watch("role")} redirectTo="/dashboard" onError={setMessage} />
+      <GoogleAuthProvider>
+        <GoogleAuthButton role={form.watch("role")} redirectTo="/dashboard" onError={setMessage} />
+      </GoogleAuthProvider>
       <div className="mt-4 text-sm text-muted-foreground">
         Already have an account? <Link href="/login" className="text-primary">Sign in</Link>
       </div>

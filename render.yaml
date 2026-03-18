@@ -2,15 +2,11 @@ services:
   - type: web
     name: redxpma-api
     runtime: node
-    plan: starter
+    plan: free
     autoDeploy: true
     buildCommand: npm install --include=dev
     startCommand: npm run start:api
     healthCheckPath: /api/health
-    disk:
-      name: redxpma-uploads
-      mountPath: /opt/render/project/src/uploads
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
@@ -34,7 +30,7 @@ services:
   - type: web
     name: redxpma-web
     runtime: node
-    plan: starter
+    plan: free
     autoDeploy: true
     buildCommand: npm install --include=dev && npm run build:web
     startCommand: npm run start:web

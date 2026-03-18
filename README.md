@@ -70,7 +70,7 @@ This repo is prepared for Render using a two-service blueprint in `render.yaml`:
 - production build/start commands
 - generated `JWT_SECRET`
 - frontend/backend URL wiring through Render service environment variables
-- a persistent disk for `/uploads` on the API service
+- free-tier compatible Render services
 
 ### Deploy steps
 
@@ -102,7 +102,8 @@ Use the same client ID in:
 
 - The backend health endpoint is `/api/health`.
 - The frontend public URL is provided by Render as `RENDER_EXTERNAL_URL`.
-- Product image uploads are stored on the API service disk mounted at `/uploads`.
+- On Render free tier, product image uploads are temporary local files and may be lost after redeploys or instance restarts.
+- Free Render services sleep after idle periods, so the first request can be slow and realtime sockets are less reliable than paid hosting.
 - MongoDB should remain external, for example MongoDB Atlas.
 
 ## Main Features
