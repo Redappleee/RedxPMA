@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import sanitizeHtml from "sanitize-html";
 
+import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
 import { AuthRequest } from "@/api/middleware/auth";
 import { emitSocketEvent, emitToUser } from "@/api/socket/events";
 import ActivityModel from "@/models/Activity";
@@ -46,7 +47,24 @@ const parseRange = (value: unknown): DashboardRange => {
   return "30d";
 };
 
+const syncAutoArchivedProducts = async () => {
+  const settings = await getWorkspaceSettings();
+  const cutoff = new Date(Date.now() - settings.productDefaults.autoArchiveDays * DAY_IN_MS);
+
+  await ProductModel.updateMany(
+    {
+      status: { $ne: "archived" },
+      updatedAt: { $lt: cutoff }
+    },
+    { $set: { status: "archived" } }
+  );
+
+  return settings;
+};
+
 export const listProducts = async (req: Request, res: Response) => {
+  await syncAutoArchivedProducts();
+
   const search = req.query.search as string | undefined;
   const category = req.query.category as string | undefined;
   const status = req.query.status as string | undefined;
@@ -89,6 +107,7 @@ export const listProducts = async (req: Request, res: Response) => {
 };
 
 export const createProduct = async (req: AuthRequest, res: Response) => {
+  const settings = await getWorkspaceSettings();
   const product = await ProductModel.create({
     ...req.body,
     name: safe(req.body.name),
@@ -105,12 +124,29 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
     metadata: { productName: product.name }
   });
 
+  if (settings.notifications.productUpdates) {
+    const recipients = [...new Set([req.auth?.userId, ...(product.assignedManagers.map((managerId) => managerId.toString()))].filter(Boolean))];
+
+    await Promise.all(
+      recipients.map((userId) =>
+        NotificationModel.create({
+          userId,
+          title: "Product created",
+          description: `${product.name} was added to the catalog`,
+          type: "success"
+        })
+      )
+    );
+  }
+
   emitSocketEvent("product:created", { productId: product.id });
 
   return res.status(201).json({ product });
 };
 
 export const getProduct = async (req: Request, res: Response) => {
+  await syncAutoArchivedProducts();
+
   const product = await ProductModel.findById(req.params.id).populate(populatePaths);
 
   if (!product) {
@@ -121,6 +157,7 @@ export const getProduct = async (req: Request, res: Response) => {
 };
 
 export const updateProduct = async (req: AuthRequest, res: Response) => {
+  const settings = await getWorkspaceSettings();
   const payload = {
     ...req.body,
     name: req.body.name ? safe(req.body.name) : undefined,
@@ -144,12 +181,28 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
     metadata: { productName: product.name }
   });
 
+  if (settings.notifications.productUpdates) {
+    const recipients = [...new Set([req.auth?.userId, ...(product.assignedManagers.map((manager) => String(manager)))].filter(Boolean))];
+
+    await Promise.all(
+      recipients.map((userId) =>
+        NotificationModel.create({
+          userId,
+          title: "Product updated",
+          description: `${product.name} was updated`,
+          type: "info"
+        })
+      )
+    );
+  }
+
   emitSocketEvent("product:updated", { productId: product.id });
 
   return res.json({ product });
 };
 
 export const deleteProduct = async (req: AuthRequest, res: Response) => {
+  const settings = await getWorkspaceSettings();
   const product = await ProductModel.findByIdAndDelete(req.params.id);
 
   if (!product) {
@@ -164,12 +217,22 @@ export const deleteProduct = async (req: AuthRequest, res: Response) => {
     metadata: { productName: product.name }
   });
 
+  if (settings.notifications.productUpdates) {
+    await NotificationModel.create({
+      userId: req.auth?.userId,
+      title: "Product removed",
+      description: `${product.name} was deleted from the catalog`,
+      type: "warning"
+    });
+  }
+
   emitSocketEvent("product:deleted", { productId: req.params.id });
 
   return res.json({ message: "Product removed" });
 };
 
 export const addComment = async (req: AuthRequest, res: Response) => {
+  const settings = await getWorkspaceSettings();
   const message = safe(req.body.message);
 
   const product = await ProductModel.findById(req.params.id);
@@ -193,17 +256,19 @@ export const addComment = async (req: AuthRequest, res: Response) => {
     metadata: { productName: product.name }
   });
 
-  for (const managerId of product.assignedManagers) {
-    await NotificationModel.create({
-      userId: managerId,
-      title: "New product comment",
-      description: `${product.name} has a new comment`,
-      type: "info"
-    });
-    emitToUser(managerId.toString(), "notification:new", {
-      title: "New product comment",
-      productId: product.id
-    });
+  if (settings.notifications.commentMentions) {
+    for (const managerId of product.assignedManagers) {
+      await NotificationModel.create({
+        userId: managerId,
+        title: "New product comment",
+        description: `${product.name} has a new comment`,
+        type: "info"
+      });
+      emitToUser(managerId.toString(), "notification:new", {
+        title: "New product comment",
+        productId: product.id
+      });
+    }
   }
 
   emitSocketEvent("product:commented", { productId: product.id });
@@ -211,7 +276,50 @@ export const addComment = async (req: AuthRequest, res: Response) => {
   return res.status(201).json({ message: "Comment added" });
 };
 
+export const deleteComment = async (req: AuthRequest, res: Response) => {
+  const settings = await getWorkspaceSettings();
+  const product = await ProductModel.findById(req.params.id);
+
+  if (!product) {
+    return res.status(404).json({ message: "Product not found" });
+  }
+
+  const requester = req.auth?.userId;
+  const requesterRole = req.auth?.role;
+  const commentIndex = product.comments.findIndex(
+    (item) => String((item as { _id?: unknown })._id) === req.params.commentId
+  );
+
+  if (commentIndex === -1) {
+    return res.status(404).json({ message: "Comment not found" });
+  }
+
+  const comment = product.comments[commentIndex];
+
+  const isPrivileged = requesterRole === "admin" || requesterRole === "manager";
+  const canDeleteOwnComment = String(comment.user) === requester && settings.teamPermissions.membersCanDeleteComments;
+
+  if (!isPrivileged && !canDeleteOwnComment) {
+    return res.status(403).json({ message: "Comment deletion is not allowed under current workspace settings" });
+  }
+
+  product.comments.splice(commentIndex, 1);
+  await product.save();
+
+  await ActivityModel.create({
+    user: requester,
+    action: "Deleted comment",
+    entityType: "product",
+    entityId: product.id,
+    metadata: { productName: product.name }
+  });
+
+  return res.json({ message: "Comment removed" });
+};
+
 export const getDashboardData = async (req: Request, res: Response) => {
+  await syncAutoArchivedProducts();
+
   const range = parseRange(req.query.range);
   const days = DASHBOARD_RANGE_DAYS[range];
   const periodStart = new Date(Date.now() - days * DAY_IN_MS);

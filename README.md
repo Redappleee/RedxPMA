@@ -1,4 +1,4 @@
-# NexusPM - Premium Product Management SaaS
+# RedxPMA - Premium Product Management SaaS
 
 A production-style product management platform built with modern tooling:
 

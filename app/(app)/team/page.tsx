@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { TopNav } from "@/components/layout/top-nav";
 import { InviteMemberDialog } from "@/components/team/invite-member-dialog";
+import { settingsService } from "@/services/settings.service";
 import { teamService } from "@/services/team.service";
 import { useAuthStore } from "@/store/auth-store";
 import { Badge } from "@/ui/badge";
@@ -15,7 +16,6 @@ export default function TeamPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const isAdmin = currentUser?.role === "admin";
-  const canInvite = currentUser?.role === "admin" || currentUser?.role === "manager";
   const [message, setMessage] = useState<string | null>(null);
   const [draftRoles, setDraftRoles] = useState<Record<string, "admin" | "manager" | "member">>({});
 
@@ -23,6 +23,20 @@ export default function TeamPage() {
     queryKey: ["team"],
     queryFn: teamService.list
   });
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings", "team-page"],
+    queryFn: settingsService.get
+  });
+
+  const canInvite =
+    currentUser?.role === "admin" ||
+    currentUser?.role === "manager" ||
+    (currentUser?.role === "member" && settingsData?.settings.teamPermissions.membersCanInvite);
+  const seatLimit = settingsData?.settings.billing.seats ?? 0;
+  const seatCount = data?.length ?? 0;
+  const seatsRemaining = Math.max(0, seatLimit - seatCount);
+  const allowedInviteRoles: Array<"manager" | "member"> =
+    currentUser?.role === "admin" || currentUser?.role === "manager" ? ["manager", "member"] : ["member"];
 
   const updateRoleMutation = useMutation({
     mutationFn: ({ id, role }: { id: string; role: "admin" | "manager" | "member" }) => teamService.updateRole(id, role),
@@ -67,14 +81,23 @@ export default function TeamPage() {
       <div className="glass flex items-center justify-between rounded-2xl p-4">
         <div>
           <h1 className="text-2xl font-semibold">Team management</h1>
-          <p className="text-sm text-muted-foreground">Invite and manage workspace collaborators.</p>
+          <p className="text-sm text-muted-foreground">
+            Invite and manage workspace collaborators. {seatLimit > 0 ? `${seatCount}/${seatLimit} seats used.` : ""}
+          </p>
         </div>
         {canInvite ? (
-          <InviteMemberDialog />
+          <InviteMemberDialog
+            allowedRoles={allowedInviteRoles}
+            defaultRole={settingsData?.settings.teamPermissions.defaultInviteRole ?? "member"}
+            disabled={seatLimit > 0 && seatsRemaining <= 0}
+          />
         ) : (
-          <p className="text-xs text-muted-foreground">Only admin and manager roles can invite team members.</p>
+          <p className="text-xs text-muted-foreground">Invites are disabled for your role under current workspace settings.</p>
         )}
       </div>
+      {seatLimit > 0 && seatsRemaining <= 0 && (
+        <p className="rounded-xl bg-warning/10 px-3 py-2 text-sm text-warning">All seats are currently used. Increase seat limit in Settings to invite more members.</p>
+      )}
       {message && <p className="rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">{message}</p>}
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

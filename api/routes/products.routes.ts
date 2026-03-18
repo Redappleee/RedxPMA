@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   addComment,
   createProduct,
+  deleteComment,
   deleteProduct,
   getDashboardData,
   getProduct,
@@ -35,5 +36,6 @@ router.patch(
 );
 router.delete("/:id", requireAuth, requireRole("admin", "manager"), asyncHandler(deleteProduct));
 router.post("/:id/comments", requireAuth, validateBody(commentSchema), asyncHandler(addComment));
+router.delete("/:id/comments/:commentId", requireAuth, asyncHandler(deleteComment));
 
 export default router;

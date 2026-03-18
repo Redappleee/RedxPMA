@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { Request, Response } from "express";
 
+import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
 import { AuthRequest } from "@/api/middleware/auth";
 import { emitSocketEvent } from "@/api/socket/events";
 import ActivityModel from "@/models/Activity";
@@ -15,6 +16,22 @@ export const listTeam = async (_req: Request, res: Response) => {
 };
 
 export const inviteMember = async (req: AuthRequest, res: Response) => {
+  const inviter = await UserModel.findById(req.auth?.userId).select("role");
+  if (!inviter) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const settings = await getWorkspaceSettings();
+  const canInvite = inviter.role === "admin" || inviter.role === "manager" || settings.teamPermissions.membersCanInvite;
+  if (!canInvite) {
+    return res.status(403).json({ message: "Your role cannot invite members under current workspace settings" });
+  }
+
+  const seatCount = await UserModel.countDocuments();
+  if (seatCount >= settings.billing.seats) {
+    return res.status(400).json({ message: "Seat limit reached for the current billing plan" });
+  }
+
   const exists = await UserModel.findOne({ email: req.body.email });
 
   if (exists) {
@@ -24,6 +41,7 @@ export const inviteMember = async (req: AuthRequest, res: Response) => {
   const temporaryPassword = crypto.randomBytes(8).toString("hex");
   const user = await UserModel.create({
     ...req.body,
+    role: inviter.role === "member" ? "member" : req.body.role,
     password: temporaryPassword
   });
 
@@ -39,6 +57,15 @@ export const inviteMember = async (req: AuthRequest, res: Response) => {
     userId: user.id,
     email: user.email
   });
+
+  if (settings.notifications.inviteAlerts) {
+    await NotificationModel.create({
+      userId: user._id,
+      title: "Workspace invite",
+      description: "You have been added to the workspace.",
+      type: "info"
+    });
+  }
 
   return res.status(201).json({
     message: "Team member invited",

@@ -42,5 +42,8 @@ export const productService = {
   },
   async addComment(id: string, message: string) {
     await apiClient.post(`/products/${id}/comments`, { message });
+  },
+  async deleteComment(id: string, commentId: string) {
+    await apiClient.delete(`/products/${id}/comments/${commentId}`);
   }
 };

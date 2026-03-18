@@ -3,6 +3,7 @@ import { Response } from "express";
 import { AuthRequest } from "@/api/middleware/auth";
 import { emitSocketEvent } from "@/api/socket/events";
 import ActivityModel from "@/models/Activity";
+import NotificationModel from "@/models/Notification";
 import SettingsModel, { SETTINGS_DOCUMENT_KEY } from "@/models/Settings";
 import { AppSettings, defaultSettings } from "@/types/settings";
 
@@ -28,6 +29,9 @@ export const getSettings = async (_req: AuthRequest, res: Response) => {
 };
 
 export const updateSettings = async (req: AuthRequest, res: Response) => {
+  const previousSettingsDoc = await ensureSettingsDocument();
+  const previousSettings = previousSettingsDoc.settings;
+
   const settingsDoc = await SettingsModel.findOneAndUpdate(
     { key: SETTINGS_DOCUMENT_KEY },
     {
@@ -36,6 +40,11 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
     },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
+
+  const billingChanged =
+    previousSettings.billing.plan !== settingsDoc.settings.billing.plan ||
+    previousSettings.billing.seats !== settingsDoc.settings.billing.seats ||
+    previousSettings.billing.invoiceEmail !== settingsDoc.settings.billing.invoiceEmail;
 
   await ActivityModel.create({
     user: req.auth?.userId,
@@ -47,6 +56,15 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
   emitSocketEvent("settings:updated", {
     updatedBy: req.auth?.userId
   });
+
+  if (billingChanged && settingsDoc.settings.notifications.billingAlerts && req.auth?.userId) {
+    await NotificationModel.create({
+      userId: req.auth.userId,
+      title: "Billing settings updated",
+      description: `Plan ${settingsDoc.settings.billing.plan} with ${settingsDoc.settings.billing.seats} seats is now active.`,
+      type: "info"
+    });
+  }
 
   return res.json({
     message: "Settings updated",

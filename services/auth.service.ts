@@ -34,6 +34,10 @@ export const authService = {
     const { data } = await apiClient.get<{ user: IUser }>("/auth/me");
     return data.user;
   },
+  async updateProfile(payload: { name: string; avatar?: string }) {
+    const { data } = await apiClient.patch<{ user: IUser }>("/auth/profile", payload);
+    return data.user;
+  },
   async getDashboardLayout() {
     const { data } = await apiClient.get<{ layout: DashboardWidgetKey[] }>("/auth/preferences/dashboard-layout");
     return data.layout;

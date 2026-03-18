@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { CreditCard, Shield, SlidersHorizontal, User2, Users, Workflow } from "lucide-react";
+import { CreditCard, LogOut, Shield, SlidersHorizontal, User2, Users, Workflow } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { TopNav } from "@/components/layout/top-nav";
 import { SettingsToggle } from "@/components/settings/settings-toggle";
+import { authService } from "@/services/auth.service";
 import { settingsService } from "@/services/settings.service";
 import { useAuthStore } from "@/store/auth-store";
 import { useSettingsStore } from "@/store/settings-store";
@@ -16,6 +17,7 @@ import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
+import { formatWorkspaceDate } from "@/utils/formatting";
 
 type SettingsTabId =
   | "profile"
@@ -40,18 +42,25 @@ const SETTINGS_TABS: Array<{ id: SettingsTabId; label: string }> = [
   { id: "billing", label: "Billing" }
 ];
 
-const activeSessions = [
-  { id: "1", device: "MacBook Air", location: "New York, US", current: true },
-  { id: "2", device: "Chrome on Windows", location: "Chicago, US", current: false }
-];
-
 export default function SettingsPage() {
   const currentUser = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const { settings, replaceSettings, lastSavedAt } = useSettingsStore();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<SettingsTabId>("profile");
   const [draft, setDraft] = useState<AppSettings>(settings);
+  const [profileDraft, setProfileDraft] = useState({
+    name: currentUser?.name ?? "",
+    avatar: currentUser?.avatar ?? ""
+  });
+  const [sessionDetails, setSessionDetails] = useState({
+    device: "Current browser session",
+    timezone: settings.workspace.timezone,
+    locale: "en-US"
+  });
   const [message, setMessage] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -74,7 +83,26 @@ export default function SettingsPage() {
     setDraft(settings);
   }, [settings]);
 
+  useEffect(() => {
+    setProfileDraft({
+      name: currentUser?.name ?? "",
+      avatar: currentUser?.avatar ?? ""
+    });
+  }, [currentUser?.avatar, currentUser?.name]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    setSessionDetails({
+      device: `${navigator.platform || "Unknown device"} · ${navigator.userAgent.includes("Chrome") ? "Chrome" : "Browser"}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || settings.workspace.timezone,
+      locale: navigator.language || "en-US"
+    });
+  }, [settings.workspace.timezone]);
+
   const isDirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(settings), [draft, settings]);
+  const isProfileDirty =
+    profileDraft.name.trim() !== (currentUser?.name ?? "") || (profileDraft.avatar || "") !== (currentUser?.avatar || "");
 
   const saveMutation = useMutation({
     mutationFn: (nextSettings: AppSettings) => settingsService.update(nextSettings),
@@ -102,6 +130,22 @@ export default function SettingsPage() {
     }
   });
 
+  const profileMutation = useMutation({
+    mutationFn: () =>
+      authService.updateProfile({
+        name: profileDraft.name.trim(),
+        avatar: profileDraft.avatar.trim() || undefined
+      }),
+    onSuccess: async (user) => {
+      setAuth(user, token);
+      await queryClient.invalidateQueries({ queryKey: ["team"] });
+      setMessage("Profile updated.");
+    },
+    onError: (error) => {
+      setMessage(error instanceof Error ? error.message : "Failed to update profile");
+    }
+  });
+
   const saveChanges = () => {
     if (!canManageSettings) {
       setMessage("Only admin or manager can update settings.");
@@ -116,6 +160,12 @@ export default function SettingsPage() {
       return;
     }
     resetMutation.mutate();
+  };
+
+  const logoutCurrentSession = async () => {
+    await authService.logout().catch(() => undefined);
+    clearAuth();
+    window.location.href = "/login";
   };
 
   const setSection = <K extends keyof AppSettings>(key: K, patch: Partial<AppSettings[K]>) => {
@@ -141,7 +191,10 @@ export default function SettingsPage() {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div>
               <Label>Full name</Label>
-              <Input value={currentUser?.name ?? ""} disabled />
+              <Input
+                value={profileDraft.name}
+                onChange={(event) => setProfileDraft((prev) => ({ ...prev, name: event.target.value }))}
+              />
             </div>
             <div>
               <Label>Email</Label>
@@ -155,7 +208,22 @@ export default function SettingsPage() {
             </div>
             <div>
               <Label>Avatar URL</Label>
-              <Input value={draft.workspace.logoUrl} onChange={(e) => setSection("workspace", { logoUrl: e.target.value })} />
+              <Input
+                value={profileDraft.avatar}
+                onChange={(event) => setProfileDraft((prev) => ({ ...prev, avatar: event.target.value }))}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-border bg-card p-3">
+              <div>
+                <p className="text-sm font-medium">Profile persistence</p>
+                <p className="text-xs text-muted-foreground">
+                  Your name and avatar update immediately across team, comments, and header UI.
+                </p>
+              </div>
+              <Button disabled={!isProfileDirty || profileMutation.isPending} onClick={() => profileMutation.mutate()}>
+                {profileMutation.isPending ? "Saving..." : "Save profile"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -177,6 +245,14 @@ export default function SettingsPage() {
               <Input
                 value={draft.workspace.companyName}
                 onChange={(e) => setSection("workspace", { companyName: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Workspace logo URL</Label>
+              <Input
+                value={draft.workspace.logoUrl}
+                placeholder="https://..."
+                onChange={(e) => setSection("workspace", { logoUrl: e.target.value })}
               />
             </div>
             <div>
@@ -408,21 +484,22 @@ export default function SettingsPage() {
               <CardTitle>Active sessions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {activeSessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-                  <div>
-                    <p className="text-sm font-medium">{session.device}</p>
-                    <p className="text-xs text-muted-foreground">{session.location}</p>
-                  </div>
-                  {session.current ? (
-                    <Badge variant="success">Current</Badge>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => setMessage("Session revoked.")}>
-                      Revoke
-                    </Button>
-                  )}
+              <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+                <div>
+                  <p className="text-sm font-medium">{sessionDetails.device}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {sessionDetails.timezone} · {sessionDetails.locale}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Idle logout after {draft.security.sessionTimeoutMinutes} minutes of inactivity.
+                  </p>
                 </div>
-              ))}
+                <Badge variant="success">Current</Badge>
+              </div>
+              <Button variant="outline" size="sm" onClick={logoutCurrentSession}>
+                <LogOut className="h-4 w-4" />
+                Log out current session
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -596,7 +673,14 @@ export default function SettingsPage() {
       {(message || lastSavedAt) && (
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           {message && <span className="rounded-xl bg-muted px-3 py-1.5">{message}</span>}
-          {lastSavedAt && <span>Last saved: {new Date(lastSavedAt).toLocaleString()}</span>}
+          {lastSavedAt && (
+            <span>
+              Last saved:{" "}
+              {formatWorkspaceDate(lastSavedAt, settings.workspace.dateFormat, settings.workspace.timezone, {
+                includeTime: true
+              })}
+            </span>
+          )}
         </div>
       )}
 

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,7 +20,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export const InviteMemberDialog = ({ disabled = false }: { disabled?: boolean }) => {
+export const InviteMemberDialog = ({
+  allowedRoles = ["manager", "member"],
+  defaultRole = "member",
+  disabled = false
+}: {
+  allowedRoles?: Array<"manager" | "member">;
+  defaultRole?: "manager" | "member";
+  disabled?: boolean;
+}) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const [result, setResult] = useState<string>("");
@@ -31,9 +39,17 @@ export const InviteMemberDialog = ({ disabled = false }: { disabled?: boolean })
     defaultValues: {
       name: "",
       email: "",
-      role: "member"
+      role: defaultRole
     }
   });
+
+  const resetForm = () => {
+    form.reset({
+      name: "",
+      email: "",
+      role: defaultRole
+    });
+  };
 
   const mutation = useMutation({
     mutationFn: teamService.invite,
@@ -41,12 +57,17 @@ export const InviteMemberDialog = ({ disabled = false }: { disabled?: boolean })
       setErrorMessage("");
       setResult(`Temporary password: ${data.invite.temporaryPassword}`);
       await queryClient.invalidateQueries({ queryKey: ["team"] });
-      form.reset();
+      resetForm();
     },
     onError: (error) => {
       setErrorMessage(error.message);
     }
   });
+
+  useEffect(() => {
+    const nextRole = allowedRoles.includes(defaultRole) ? defaultRole : allowedRoles[0] ?? "member";
+    form.setValue("role", nextRole);
+  }, [allowedRoles, defaultRole, form]);
 
   return (
     <Dialog
@@ -56,7 +77,7 @@ export const InviteMemberDialog = ({ disabled = false }: { disabled?: boolean })
         if (!value) {
           setResult("");
           setErrorMessage("");
-          form.reset();
+          resetForm();
         }
       }}
     >
@@ -85,10 +106,13 @@ export const InviteMemberDialog = ({ disabled = false }: { disabled?: boolean })
               className="h-10 w-full rounded-xl border border-border bg-background/60 px-3 text-sm"
               {...form.register("role")}
             >
-              <option value="manager">Manager</option>
-              <option value="member">Member</option>
+              {allowedRoles.includes("manager") && <option value="manager">Manager</option>}
+              {allowedRoles.includes("member") && <option value="member">Member</option>}
             </select>
           </div>
+          {allowedRoles.length === 1 && (
+            <p className="text-xs text-muted-foreground">Your current permissions allow inviting {allowedRoles[0]} users only.</p>
+          )}
           <Button className="w-full" disabled={mutation.isPending}>
             {mutation.isPending ? "Sending..." : "Send invite"}
           </Button>

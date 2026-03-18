@@ -12,7 +12,6 @@ router.get("/", requireAuth, asyncHandler(listTeam));
 router.post(
   "/invite",
   requireAuth,
-  requireRole("admin", "manager"),
   validateBody(inviteSchema),
   asyncHandler(inviteMember)
 );

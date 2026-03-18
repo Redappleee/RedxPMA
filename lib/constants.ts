@@ -1,7 +1,7 @@
 import { BarChart3, Bell, Boxes, LayoutDashboard, Settings, Users } from "lucide-react";
 import { Route } from "next";
 
-export const APP_NAME = "NexusPM";
+export const APP_NAME = "RedxPMA";
 
 export const SIDEBAR_LINKS: Array<{ href: Route; label: string; icon: typeof LayoutDashboard }> = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },

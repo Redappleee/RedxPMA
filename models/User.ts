@@ -10,6 +10,8 @@ export interface IUserDocument extends Document {
   password: string;
   role: Role;
   avatar?: string;
+  createdAt: Date;
+  updatedAt: Date;
   preferences: {
     dashboardLayout: DashboardWidgetKey[];
   };

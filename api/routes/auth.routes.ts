@@ -7,6 +7,7 @@ import {
   login,
   logout,
   me,
+  updateProfile,
   resetPassword,
   signup,
   updateDashboardLayout
@@ -16,6 +17,7 @@ import {
   forgotPasswordSchema,
   googleAuthSchema,
   loginSchema,
+  profileUpdateSchema,
   resetPasswordSchema,
   signupSchema
 } from "@/api/config/validators";
@@ -30,6 +32,7 @@ router.post("/login", validateBody(loginSchema), asyncHandler(login));
 router.post("/google", validateBody(googleAuthSchema), asyncHandler(googleAuth));
 router.post("/logout", asyncHandler(logout));
 router.get("/me", requireAuth, asyncHandler(me));
+router.patch("/profile", requireAuth, validateBody(profileUpdateSchema), asyncHandler(updateProfile));
 router.get("/preferences/dashboard-layout", requireAuth, asyncHandler(getDashboardLayout));
 router.put(
   "/preferences/dashboard-layout",

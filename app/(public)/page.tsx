@@ -33,7 +33,7 @@ const features = [
 
 const testimonials = [
   {
-    quote: "NexusPM replaced three tools and made our release cycles 35% faster.",
+    quote: "RedxPMA replaced three tools and made our release cycles 35% faster.",
     name: "Lena Park",
     role: "VP Product, Synthex"
   },
@@ -84,7 +84,7 @@ export default function LandingPage() {
             Ship faster with a premium product command center.
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            NexusPM unifies product planning, execution, analytics, and collaboration in one stunningly fast SaaS workspace.
+            RedxPMA unifies product planning, execution, analytics, and collaboration in one stunningly fast SaaS workspace.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
@@ -197,7 +197,7 @@ export default function LandingPage() {
         </Button>
       </section>
 
-      <footer className="py-14 text-sm text-muted-foreground">© {new Date().getFullYear()} NexusPM. Crafted for high-performing product teams.</footer>
+      <footer className="py-14 text-sm text-muted-foreground">© {new Date().getFullYear()} RedxPMA. Crafted for high-performing product teams.</footer>
     </main>
   );
 }

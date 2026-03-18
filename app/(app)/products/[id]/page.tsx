@@ -8,15 +8,20 @@ import { useState } from "react";
 
 import { TopNav } from "@/components/layout/top-nav";
 import { productService } from "@/services/product.service";
+import { useAuthStore } from "@/store/auth-store";
+import { useSettingsStore } from "@/store/settings-store";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Textarea } from "@/ui/textarea";
 import { timeAgo } from "@/utils/date";
+import { formatCurrency, formatWorkspaceDate } from "@/utils/formatting";
 
 export default function ProductDetailsPage() {
   const params = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
+  const settings = useSettingsStore((state) => state.settings);
   const [comment, setComment] = useState("");
   const rawId = params?.id;
   const productId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -50,6 +55,18 @@ export default function ProductDetailsPage() {
     }
   });
 
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => {
+      if (!productId) {
+        throw new Error("Missing product id");
+      }
+      return productService.deleteComment(productId, commentId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["product", productId] });
+    }
+  });
+
   if (isLoading) {
     return (
       <section className="space-y-4">
@@ -78,6 +95,14 @@ export default function ProductDetailsPage() {
       </section>
     );
   }
+
+  const taxInclusivePrice = Math.round(product.price * (1 + settings.productDefaults.taxRate / 100));
+  const isLowStock = product.stock <= settings.productDefaults.lowStockThreshold;
+  const canDeleteComment = (commentUserId: string) => {
+    if (!currentUser) return false;
+    if (currentUser.role === "admin" || currentUser.role === "manager") return true;
+    return settings.teamPermissions.membersCanDeleteComments && currentUser._id === commentUserId;
+  };
 
   return (
     <section className="space-y-4">
@@ -109,11 +134,21 @@ export default function ProductDetailsPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-card p-3 text-sm">
                 <p className="text-xs text-muted-foreground">Price</p>
-                <p className="mt-1 text-lg font-semibold">${product.price}</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatCurrency(product.price, settings.workspace.currency)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Inc. tax: {formatCurrency(taxInclusivePrice, settings.workspace.currency)}
+                </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-3 text-sm">
                 <p className="text-xs text-muted-foreground">Stock</p>
                 <p className="mt-1 text-lg font-semibold">{product.stock}</p>
+                <p className={`mt-1 text-xs ${isLowStock ? "text-warning" : "text-muted-foreground"}`}>
+                  {isLowStock
+                    ? `Below low-stock threshold (${settings.productDefaults.lowStockThreshold})`
+                    : "Inventory healthy"}
+                </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-3 text-sm">
                 <p className="text-xs text-muted-foreground">Category</p>
@@ -157,9 +192,27 @@ export default function ProductDetailsPage() {
             <div className="space-y-2 pt-2">
               {product.comments.map((item) => (
                 <div key={item._id} className="rounded-xl border border-border bg-card p-3">
-                  <p className="text-sm font-medium">{item.user?.name ?? "Teammate"}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm font-medium">{item.user?.name ?? "Teammate"}</p>
+                    {item.user?._id && canDeleteComment(item.user._id) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-auto px-2 py-1 text-xs text-danger"
+                        disabled={deleteCommentMutation.isPending}
+                        onClick={() => deleteCommentMutation.mutate(item._id)}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
                   <p className="mt-1 text-sm">{item.message}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{timeAgo(item.createdAt)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {timeAgo(item.createdAt)} ·{" "}
+                    {formatWorkspaceDate(item.createdAt, settings.workspace.dateFormat, settings.workspace.timezone, {
+                      includeTime: true
+                    })}
+                  </p>
                 </div>
               ))}
             </div>
@@ -176,14 +229,24 @@ export default function ProductDetailsPage() {
                 <Package className="h-4 w-4 text-primary" />
                 Product record created
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">{timeAgo(product.createdAt)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {timeAgo(product.createdAt)} ·{" "}
+                {formatWorkspaceDate(product.createdAt, settings.workspace.dateFormat, settings.workspace.timezone, {
+                  includeTime: true
+                })}
+              </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-3 text-sm">
               <p className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
                 Last updated
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">{timeAgo(product.updatedAt)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {timeAgo(product.updatedAt)} ·{" "}
+                {formatWorkspaceDate(product.updatedAt, settings.workspace.dateFormat, settings.workspace.timezone, {
+                  includeTime: true
+                })}
+              </p>
             </div>
           </CardContent>
         </Card>

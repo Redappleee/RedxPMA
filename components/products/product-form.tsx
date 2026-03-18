@@ -3,12 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
 import { productService } from "@/services/product.service";
+import { settingsService } from "@/services/settings.service";
 import { teamService } from "@/services/team.service";
 import { uploadService } from "@/services/upload.service";
 import { useAuthStore } from "@/store/auth-store";
@@ -47,22 +48,52 @@ export const ProductForm = ({ product }: { product?: IProduct }) => {
     queryFn: teamService.list,
     enabled: canManageProducts
   });
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings", "product-form"],
+    queryFn: settingsService.get,
+    enabled: canManageProducts
+  });
 
   const managerUsers = teamMembers.filter((member) => member.role === "manager" || member.role === "admin");
+  const productDefaults = settingsData?.settings.productDefaults;
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [productDefaults?.defaultCategory, ...PRODUCT_CATEGORIES].filter((value): value is string => Boolean(value))
+        )
+      ),
+    [productDefaults?.defaultCategory]
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: product?.name ?? "",
       description: product?.description ?? "",
-      category: product?.category ?? PRODUCT_CATEGORIES[0],
+      category: product?.category ?? productDefaults?.defaultCategory ?? PRODUCT_CATEGORIES[0],
       price: product?.price ?? 0,
       stock: product?.stock ?? 0,
-      status: product?.status ?? "draft",
+      status: product?.status ?? productDefaults?.defaultStatus ?? "draft",
       image: product?.image ?? "",
       assignedManagers: product?.assignedManagers?.map((manager) => manager._id) ?? []
     }
   });
+
+  useEffect(() => {
+    if (!product && productDefaults && !form.formState.isDirty) {
+      form.reset({
+        name: "",
+        description: "",
+        category: productDefaults.defaultCategory || PRODUCT_CATEGORIES[0],
+        price: 0,
+        stock: 0,
+        status: productDefaults.defaultStatus,
+        image: "",
+        assignedManagers: []
+      });
+    }
+  }, [form, form.formState.isDirty, product, productDefaults]);
 
   const selectedManagerIds = form.watch("assignedManagers");
   const selectedManagers = managerUsers.filter((user) => selectedManagerIds.includes(user._id));
@@ -165,7 +196,7 @@ export const ProductForm = ({ product }: { product?: IProduct }) => {
               disabled={!canManageProducts}
               {...form.register("category")}
             >
-              {PRODUCT_CATEGORIES.map((category) => (
+              {categoryOptions.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
@@ -194,6 +225,11 @@ export const ProductForm = ({ product }: { product?: IProduct }) => {
           <div>
             <Label>Stock</Label>
             <Input type="number" min={0} step={1} disabled={!canManageProducts} {...form.register("stock")} />
+            {productDefaults && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Stock at or below {productDefaults.lowStockThreshold} will be flagged as low inventory.
+              </p>
+            )}
           </div>
 
           <div className="md:col-span-2">

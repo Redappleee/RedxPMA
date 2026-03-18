@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { authService } from "@/services/auth.service";
 import { productService } from "@/services/product.service";
 import { useAuthStore } from "@/store/auth-store";
+import { useSettingsStore } from "@/store/settings-store";
 import {
   DASHBOARD_RANGES,
   DashboardRange,
@@ -37,6 +38,7 @@ import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Skeleton } from "@/ui/skeleton";
+import { formatCurrency } from "@/utils/formatting";
 
 const RevenueChart = dynamic(
   () => import("@/components/charts/revenue-chart").then((module) => module.RevenueChart),
@@ -92,6 +94,12 @@ const RANGE_LABELS: Record<DashboardRange, string> = {
   "90d": "90 days"
 };
 
+const CURRENCY_PREFIX: Record<"USD" | "EUR" | "GBP", string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£"
+};
+
 const moveWidget = (layout: DashboardWidgetKey[], fromIndex: number, toIndex: number) => {
   const next = [...layout];
   const [moved] = next.splice(fromIndex, 1);
@@ -108,6 +116,8 @@ const trendFromValue = (value: number): "up" | "down" | "neutral" => {
 export default function DashboardPage() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const currency = useSettingsStore((state) => state.settings.workspace.currency);
+  const lowStockThreshold = useSettingsStore((state) => state.settings.productDefaults.lowStockThreshold);
   const userId = user?._id;
   const [range, setRange] = useState<DashboardRange>("30d");
   const [widgetOrder, setWidgetOrder] = useState<DashboardWidgetKey[]>(DEFAULT_DASHBOARD_LAYOUT);
@@ -186,7 +196,7 @@ export default function DashboardPage() {
     );
   }, [data?.productMix]);
 
-  const lowStockCount = topProducts.filter((product) => product.stock <= 20).length;
+  const lowStockCount = topProducts.filter((product) => product.stock <= lowStockThreshold).length;
   const averagePrice = topProducts.length
     ? Math.round(topProducts.reduce((sum, product) => sum + product.price, 0) / topProducts.length)
     : 0;
@@ -257,7 +267,7 @@ export default function DashboardPage() {
           <StatCard
             title="Revenue projection"
             value={metrics.monthlyRevenue}
-            prefix="$"
+            prefix={CURRENCY_PREFIX[currency]}
             icon={DollarSign}
             trend={trendFromValue(comparisons.revenuePct)}
             highlight={`${comparisons.revenuePct >= 0 ? "+" : ""}${comparisons.revenuePct}% vs previous ${RANGE_LABELS[range]}`}
@@ -346,8 +356,8 @@ export default function DashboardPage() {
                 </Badge>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold">${product.price.toLocaleString("en-US")}</p>
-                <p className={cn("text-xs", product.stock <= 20 ? "text-warning" : "text-muted-foreground")}>
+                <p className="text-sm font-semibold">{formatCurrency(product.price, currency)}</p>
+                <p className={cn("text-xs", product.stock <= lowStockThreshold ? "text-warning" : "text-muted-foreground")}>
                   {product.stock} in stock
                 </p>
               </div>
@@ -412,11 +422,11 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-border/60 bg-card/70 p-3">
               <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Low stock watch</p>
               <p className="mt-1 text-2xl font-semibold">{lowStockCount}</p>
-              <p className="text-xs text-muted-foreground">Products at or below 20 units</p>
+              <p className="text-xs text-muted-foreground">Products at or below {lowStockThreshold} units</p>
             </div>
             <div className="rounded-xl border border-border/60 bg-card/70 p-3">
               <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Avg price</p>
-              <p className="mt-1 text-2xl font-semibold">${averagePrice.toLocaleString("en-US")}</p>
+              <p className="mt-1 text-2xl font-semibold">{formatCurrency(averagePrice, currency)}</p>
               <p className="text-xs text-muted-foreground">Based on top priced products</p>
             </div>
           </div>

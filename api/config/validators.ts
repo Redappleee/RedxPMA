@@ -68,6 +68,11 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8)
 });
 
+export const profileUpdateSchema = z.object({
+  name: z.string().min(2).max(80),
+  avatar: z.string().url().or(z.literal("")).optional()
+});
+
 export const dashboardRangeSchema = z.enum(DASHBOARD_RANGES);
 
 export const dashboardLayoutSchema = z

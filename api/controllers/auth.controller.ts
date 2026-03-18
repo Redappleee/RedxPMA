@@ -4,6 +4,8 @@ import { OAuth2Client } from "google-auth-library";
 
 import { serverEnv } from "@/api/config/env";
 import { signAccessToken } from "@/api/config/tokens";
+import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
+import NotificationModel from "@/models/Notification";
 import PasswordResetTokenModel from "@/models/PasswordResetToken";
 import UserModel from "@/models/User";
 import { DEFAULT_DASHBOARD_LAYOUT, DashboardWidgetKey } from "@/types/dashboard";
@@ -89,6 +91,16 @@ export const login = async (req: Request, res: Response) => {
   const response = buildAuthResponse(user);
   setAuthCookie(res, response.token);
 
+  const settings = await getWorkspaceSettings();
+  if (settings.security.loginAlerts) {
+    await NotificationModel.create({
+      userId: user._id,
+      title: "New sign-in",
+      description: "A new sign-in was recorded for your account.",
+      type: "info"
+    });
+  }
+
   return res.json(response.payload);
 };
 
@@ -128,6 +140,17 @@ export const googleAuth = async (req: Request, res: Response) => {
 
     const response = buildAuthResponse(user);
     setAuthCookie(res, response.token);
+
+    const settings = await getWorkspaceSettings();
+    if (settings.security.loginAlerts) {
+      await NotificationModel.create({
+        userId: user._id,
+        title: "New sign-in",
+        description: "A new sign-in was recorded for your account.",
+        type: "info"
+      });
+    }
+
     return res.json(response.payload);
   } catch {
     return res.status(401).json({ message: "Google authentication failed" });
@@ -142,6 +165,31 @@ export const me = async (req: Request & { auth?: { userId: string } }, res: Resp
   }
 
   return res.json({ user });
+};
+
+export const updateProfile = async (req: Request & { auth?: { userId: string } }, res: Response) => {
+  const user = await UserModel.findById(req.auth?.userId).select("-password");
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  user.name = req.body.name;
+  user.avatar = req.body.avatar || undefined;
+  await user.save();
+
+  return res.json({
+    user: {
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      preferences: user.preferences,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    }
+  });
 };
 
 export const getDashboardLayout = async (req: Request & { auth?: { userId: string } }, res: Response) => {

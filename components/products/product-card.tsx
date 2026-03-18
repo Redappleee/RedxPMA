@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { Boxes, CircleDollarSign, Package } from "lucide-react";
 import Link from "next/link";
 
+import { useSettingsStore } from "@/store/settings-store";
 import { IProduct } from "@/types";
 import { Badge } from "@/ui/badge";
 import { Card, CardContent } from "@/ui/card";
+import { formatCurrency } from "@/utils/formatting";
 
 const statusVariant = {
   active: "success",
@@ -15,6 +17,9 @@ const statusVariant = {
 } as const;
 
 export const ProductCard = ({ product }: { product: IProduct }) => {
+  const currency = useSettingsStore((state) => state.settings.workspace.currency);
+  const lowStockThreshold = useSettingsStore((state) => state.settings.productDefaults.lowStockThreshold);
+
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
       <Link href={`/products/${product._id}`}>
@@ -33,9 +38,10 @@ export const ProductCard = ({ product }: { product: IProduct }) => {
                 {product.category}
               </p>
               <p className="flex items-center gap-1">
-                <CircleDollarSign className="h-3.5 w-3.5" />${product.price}
+                <CircleDollarSign className="h-3.5 w-3.5" />
+                {formatCurrency(product.price, currency)}
               </p>
-              <p className="flex items-center gap-1">
+              <p className={`flex items-center gap-1 ${product.stock <= lowStockThreshold ? "text-warning" : ""}`}>
                 <Package className="h-3.5 w-3.5" />{product.stock}
               </p>
             </div>

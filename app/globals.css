@@ -19,6 +19,16 @@
   --danger: 0 78% 59%;
 }
 
+:root[data-accent="emerald"] {
+  --primary: 160 84% 39%;
+  --ring: 160 84% 39%;
+}
+
+:root[data-accent="orange"] {
+  --primary: 24 94% 53%;
+  --ring: 24 94% 53%;
+}
+
 .dark {
   --background: 223 35% 8%;
   --foreground: 210 40% 96%;
@@ -42,6 +52,28 @@
 body {
   @apply bg-background text-foreground antialiased;
   font-feature-settings: "ss01" 1, "ss02" 1;
+}
+
+body.compact-mode .glass {
+  border-radius: 1rem;
+}
+
+body.compact-mode main {
+  padding-top: 0.75rem;
+  padding-bottom: 1.5rem;
+}
+
+body.compact-mode .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 .noise-overlay {
