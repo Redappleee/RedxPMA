@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run api:nowatch\" \"npm run dev:web\"",
+    "build:web": "next build",
+    "start:web": "next start -p ${PORT:-3000}",
+    "start:api": "tsx --require tsconfig-paths/register api/server.ts",
     "dev:web": "next dev -p 3005",
     "dev:3005": "next dev -p 3005",
     "dev:full": "concurrently \"npm run api\" \"npm run dev:web\"",

@@ -33,8 +33,7 @@ apiClient.interceptors.response.use(
     }
 
     if (!message && axios.isAxiosError(error) && error.code === "ERR_NETWORK") {
-      message =
-        "Cannot reach API server (connection refused or blocked). Ensure backend is running on http://localhost:4000.";
+      message = `Cannot reach API server (connection refused or blocked). Ensure backend is running and reachable at ${apiClient.defaults.baseURL}.`;
     }
 
     if (!message && axios.isAxiosError(error) && !error.response) {

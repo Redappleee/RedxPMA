@@ -24,7 +24,7 @@ A production-style product management platform built with modern tooling:
 - `/utils` - helper functions
 - `/types` - shared TypeScript types
 
-## Setup
+## Local Setup
 
 1. Install dependencies
 
@@ -57,6 +57,54 @@ npm run dev
 
 5. Open [http://localhost:3005](http://localhost:3005)
 
+## Render Deployment
+
+This repo is prepared for Render using a two-service blueprint in `render.yaml`:
+
+- `redxpma-web` - Next.js frontend
+- `redxpma-api` - Express API + Socket.IO backend
+
+### What the blueprint configures
+
+- separate frontend and backend web services
+- production build/start commands
+- generated `JWT_SECRET`
+- frontend/backend URL wiring through Render service environment variables
+- a persistent disk for `/uploads` on the API service
+
+### Deploy steps
+
+1. Push the repo to GitHub.
+2. In Render, create a new Blueprint and select this repository.
+3. Review the generated services from `render.yaml`.
+4. Set these required secrets before first deploy:
+
+```text
+MONGO_URI
+GOOGLE_CLIENT_ID (optional unless Google OAuth is enabled)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID (same value as GOOGLE_CLIENT_ID when Google OAuth is enabled)
+```
+
+### Google OAuth on Render
+
+If Google login is enabled, add the frontend Render URL to the Google Cloud OAuth client as an authorized JavaScript origin:
+
+```text
+https://your-frontend-service.onrender.com
+```
+
+Use the same client ID in:
+
+- `GOOGLE_CLIENT_ID` on the API service
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` on the web service
+
+### Notes
+
+- The backend health endpoint is `/api/health`.
+- The frontend public URL is provided by Render as `RENDER_EXTERNAL_URL`.
+- Product image uploads are stored on the API service disk mounted at `/uploads`.
+- MongoDB should remain external, for example MongoDB Atlas.
+
 ## Main Features
 
 - Auth: signup/login/logout, forgot/reset password, cookie-based JWT sessions
@@ -78,9 +126,11 @@ npm run dev
 
 ## Scripts
 
-- `npm run dev` - ensure self-healing API daemon is running, then start frontend
+- `npm run dev` - start API and frontend together for local development
 - `npm run dev:web` - Next.js frontend only
 - `npm run api` - Express API + Socket server (watch mode)
+- `npm run start:web` - production frontend start using Render `PORT`
+- `npm run start:api` - production API start
 - `npm run api:daemon:ensure` - ensure API supervisor is running
 - `npm run api:daemon:start` - start API supervisor daemon
 - `npm run api:daemon:stop` - stop API supervisor + child API process
@@ -90,5 +140,6 @@ npm run dev
 - `npm run api:bg:stop` - stop background API
 - `npm run api:bg:status` - check if API listens on `:4000`
 - `npm run api:bg:logs` - tail background API logs
-- `npm run build` - production build
+- `npm run build` - production Next.js build
+- `npm run build:web` - explicit frontend build command for Render
 - `npm run typecheck` - TypeScript checks
