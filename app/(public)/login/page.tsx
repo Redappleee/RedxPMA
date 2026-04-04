@@ -37,6 +37,7 @@ export default function LoginPage() {
       password: ""
     }
   });
+  const emailValue = form.watch("email");
   const redirect =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect") ?? "/dashboard"
@@ -54,7 +55,7 @@ export default function LoginPage() {
   const forgotMutation = useMutation({
     mutationFn: authService.forgotPassword,
     onSuccess: (data) => {
-      setMessage(data.token ? `Reset token: ${data.token}` : data.message);
+      setMessage(data.message);
     },
     onError: (error) => setMessage(error.message)
   });
@@ -91,10 +92,10 @@ export default function LoginPage() {
 
       <div className="mt-4 flex items-center justify-between text-sm">
         <button
-          onClick={() => forgotMutation.mutate(form.getValues("email"))}
+          onClick={() => forgotMutation.mutate(emailValue)}
           className="text-primary"
           type="button"
-          disabled={forgotMutation.isPending || !form.getValues("email")}
+          disabled={forgotMutation.isPending || !emailValue}
         >
           Forgot password?
         </button>

@@ -49,13 +49,28 @@ If you run frontend on a non-default port (for example `3005`), set:
 - `CLIENT_URL=http://localhost:3005`
 - `CLIENT_URLS=http://localhost:3005,http://localhost:3000`
 
-4. Start development
+4. Configure SMTP for password reset emails
+
+Set these backend environment variables:
+
+```text
+SMTP_HOST
+SMTP_PORT
+SMTP_SECURE
+SMTP_USER
+SMTP_PASS
+SMTP_FROM
+```
+
+The forgot-password flow now sends a reset email that links to `/reset-password`.
+
+5. Start development
 
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3005](http://localhost:3005)
+6. Open [http://localhost:3005](http://localhost:3005)
 
 ## Render Deployment
 
@@ -83,6 +98,12 @@ This repo is prepared for Render using a two-service blueprint in `render.yaml`:
 MONGO_URI
 GOOGLE_CLIENT_ID (optional unless Google OAuth is enabled)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID (same value as GOOGLE_CLIENT_ID when Google OAuth is enabled)
+SMTP_HOST
+SMTP_PORT
+SMTP_SECURE
+SMTP_USER
+SMTP_PASS
+SMTP_FROM
 ```
 
 ### Google OAuth on Render

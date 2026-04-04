@@ -49,7 +49,7 @@ export const authService = {
     return data.layout;
   },
   async forgotPassword(email: string) {
-    const { data } = await apiClient.post<{ message: string; token?: string }>("/auth/forgot-password", {
+    const { data } = await apiClient.post<{ message: string }>("/auth/forgot-password", {
       email
     });
     return data;

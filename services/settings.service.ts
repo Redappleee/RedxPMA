@@ -7,7 +7,16 @@ export interface SettingsResponse {
   message?: string;
 }
 
+export interface PublicBrandingResponse {
+  workspace: Pick<AppSettings["workspace"], "companyName" | "logoUrl">;
+  updatedAt?: string;
+}
+
 export const settingsService = {
+  async getPublicBranding() {
+    const { data } = await apiClient.get<PublicBrandingResponse>("/settings/public");
+    return data;
+  },
   async get() {
     const { data } = await apiClient.get<SettingsResponse>("/settings");
     return data;

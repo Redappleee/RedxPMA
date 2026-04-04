@@ -21,7 +21,19 @@ const serverEnvSchema = z.object({
   JWT_SECRET: z.string().min(12, "JWT_SECRET must be at least 12 chars"),
   CLIENT_URL: z.string().url().default("http://localhost:3005"),
   CLIENT_URLS: clientUrlsSchema,
-  GOOGLE_CLIENT_ID: z.string().optional()
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_SECURE: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((value) => {
+      if (typeof value === "boolean") return value;
+      return value === "true";
+    }),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().optional()
 });
 
 export const serverEnv = serverEnvSchema.parse(process.env);

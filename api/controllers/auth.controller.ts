@@ -4,6 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 
 import { serverEnv } from "@/api/config/env";
 import { signAccessToken } from "@/api/config/tokens";
+import { isMailerConfigured, sendPasswordResetEmail } from "@/api/lib/mailer";
 import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
 import NotificationModel from "@/models/Notification";
 import PasswordResetTokenModel from "@/models/PasswordResetToken";
@@ -229,16 +230,22 @@ export const logout = async (_req: Request, res: Response) => {
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
+  if (!isMailerConfigured()) {
+    return res.status(500).json({ message: "Password reset email service is not configured" });
+  }
+
   const user = await UserModel.findOne({ email: req.body.email });
 
   if (!user) {
     return res.json({
-      message: "If your email exists, a reset instruction has been generated"
+      message: "If your email exists, a password reset email has been sent"
     });
   }
 
   const token = crypto.randomBytes(24).toString("hex");
   const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
+
+  await PasswordResetTokenModel.deleteMany({ userId: user._id });
 
   await PasswordResetTokenModel.create({
     userId: user._id,
@@ -246,10 +253,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
     expiresAt
   });
 
-  // In production this should be sent by email provider.
+  const resetUrl = `${serverEnv.CLIENT_URL.replace(/\/$/, "")}/reset-password?token=${token}`;
+
+  await sendPasswordResetEmail({
+    to: user.email,
+    name: user.name,
+    resetUrl
+  });
+
   return res.json({
-    message: "Password reset token generated",
-    token
+    message: "If your email exists, a password reset email has been sent"
   });
 };
 

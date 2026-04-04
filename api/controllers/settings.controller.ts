@@ -28,6 +28,18 @@ export const getSettings = async (_req: AuthRequest, res: Response) => {
   });
 };
 
+export const getPublicBranding = async (_req: AuthRequest, res: Response) => {
+  const settingsDoc = await ensureSettingsDocument();
+
+  return res.json({
+    workspace: {
+      companyName: settingsDoc.settings.workspace.companyName,
+      logoUrl: settingsDoc.settings.workspace.logoUrl
+    },
+    updatedAt: settingsDoc.updatedAt
+  });
+};
+
 export const updateSettings = async (req: AuthRequest, res: Response) => {
   const previousSettingsDoc = await ensureSettingsDocument();
   const previousSettings = previousSettingsDoc.settings;
