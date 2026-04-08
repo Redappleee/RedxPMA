@@ -40,13 +40,13 @@ export const sendPasswordResetEmail = async ({
   await transporter.sendMail({
     from: serverEnv.SMTP_FROM,
     to,
-    subject: "Reset your RedxPMA password",
+    subject: "Reset your Nexus Labs password",
     text: `Hi ${name},\n\nReset your password using this link: ${resetUrl}\n\nThis link expires in 30 minutes.`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
         <h2 style="margin-bottom: 12px;">Reset your password</h2>
         <p>Hi ${name},</p>
-        <p>Click the button below to reset your RedxPMA password. This link expires in 30 minutes.</p>
+        <p>Click the button below to reset your Nexus Labs password. This link expires in 30 minutes.</p>
         <p style="margin: 24px 0;">
           <a
             href="${resetUrl}"

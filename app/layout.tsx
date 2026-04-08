@@ -5,7 +5,7 @@ import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {
-  title: "RedxPMA | Premium Product Management",
+  title: "Nexus Labs | Premium Product Management",
   description: "Modern SaaS platform for product teams with analytics, collaboration, and realtime workflows"
 };
 

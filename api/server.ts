@@ -56,14 +56,14 @@ app.use("/uploads", express.static(uploadsPath));
 
 app.get("/", (_req, res) => {
   res.json({
-    message: "NexusPM API is running",
+    message: "Nexus Labs API is running",
     health: "/api/health"
   });
 });
 
 app.get("/api", (_req, res) => {
   res.json({
-    message: "NexusPM API root",
+    message: "Nexus Labs API root",
     health: "/api/health"
   });
 });

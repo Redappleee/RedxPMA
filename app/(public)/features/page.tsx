@@ -26,7 +26,7 @@ export default function FeaturesPage() {
     <main className="container pb-12 pt-8">
       <h1 className="text-4xl font-semibold">Everything your product org needs</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        RedxPMA blends performance analytics, collaboration, and secure workflows into one production-ready platform.
+        Nexus Labs blends performance analytics, collaboration, and secure workflows into one production-ready platform.
       </p>
 
       <div className="mt-10 grid gap-4 md:grid-cols-2">

@@ -61,7 +61,7 @@ export default function LoginPage() {
   });
 
   return (
-    <AuthShell title="Welcome back" subtitle="Sign in to your RedxPMA workspace">
+    <AuthShell title="Welcome back" subtitle="Sign in to your Nexus Labs workspace">
       <form className="space-y-4" onSubmit={form.handleSubmit((values) => loginMutation.mutate(values))}>
         <div>
           <Label htmlFor="email">Email</Label>
