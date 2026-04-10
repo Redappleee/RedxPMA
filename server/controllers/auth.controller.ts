@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import crypto from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 
-import { serverEnv } from "@/api/config/env";
-import { signAccessToken } from "@/api/config/tokens";
-import { isMailerConfigured, sendPasswordResetEmail } from "@/api/lib/mailer";
-import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
+import { serverEnv } from "@/server/config/env";
+import { signAccessToken } from "@/server/config/tokens";
+import { isMailerConfigured, sendPasswordResetEmail } from "@/server/lib/mailer";
+import { getWorkspaceSettings } from "@/server/lib/workspace-settings";
 import NotificationModel from "@/models/Notification";
 import PasswordResetTokenModel from "@/models/PasswordResetToken";
 import UserModel from "@/models/User";

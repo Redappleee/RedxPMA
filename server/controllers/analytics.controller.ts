@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 
-import { analyticsQuerySchema } from "@/api/config/validators";
-import { AuthRequest } from "@/api/middleware/auth";
+import { analyticsQuerySchema } from "@/server/config/validators";
+import { AuthRequest } from "@/server/middleware/auth";
 import AnalyticsPreferenceModel, { toAnalyticsPreset } from "@/models/AnalyticsPreference";
 import ProductModel from "@/models/Product";
 import { DashboardRange, DASHBOARD_RANGE_DAYS } from "@/types/dashboard";

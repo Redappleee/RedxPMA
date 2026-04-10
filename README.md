@@ -20,7 +20,7 @@ A production-style product management platform built with modern tooling:
 - `/services` - API service clients
 - `/store` - Zustand stores
 - `/models` - Mongoose models
-- `/api` - Express backend (routes, middleware, socket, controllers)
+- `/server` - Express backend (routes, middleware, socket, controllers)
 - `/utils` - helper functions
 - `/types` - shared TypeScript types
 
@@ -77,7 +77,7 @@ npm run dev
 This repo is prepared for Render using a two-service blueprint in `render.yaml`:
 
 - `redxpma-web` - Next.js frontend
-- `redxpma-api` - Express API + Socket.IO backend
+- `redxpma-api` - Express server + Socket.IO backend
 
 ### What the blueprint configures
 
@@ -116,7 +116,7 @@ https://your-frontend-service.onrender.com
 
 Use the same client ID in:
 
-- `GOOGLE_CLIENT_ID` on the API service
+- `GOOGLE_CLIENT_ID` on the backend service
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` on the web service
 
 ### Notes
@@ -148,20 +148,22 @@ Use the same client ID in:
 
 ## Scripts
 
-- `npm run dev` - start API and frontend together for local development
+- `npm run dev` - start backend server and frontend together for local development
 - `npm run dev:web` - Next.js frontend only
-- `npm run api` - Express API + Socket server (watch mode)
+- `npm run dev:server` - Express server (watch mode)
+- `npm run dev:server:nowatch` - Express server without watch mode
 - `npm run start:web` - production frontend start using Render `PORT`
-- `npm run start:api` - production API start
-- `npm run api:daemon:ensure` - ensure API supervisor is running
-- `npm run api:daemon:start` - start API supervisor daemon
-- `npm run api:daemon:stop` - stop API supervisor + child API process
-- `npm run api:daemon:status` - show supervisor and API listener status
-- `npm run api:daemon:logs` - tail supervisor + API logs
-- `npm run api:bg:start` - start API in background (keeps running)
-- `npm run api:bg:stop` - stop background API
-- `npm run api:bg:status` - check if API listens on `:4000`
-- `npm run api:bg:logs` - tail background API logs
+- `npm run start:server` - production backend start
+- `npm run server:daemon:ensure` - ensure backend supervisor is running
+- `npm run server:daemon:start` - start backend supervisor daemon
+- `npm run server:daemon:stop` - stop backend supervisor + child process
+- `npm run server:daemon:status` - show supervisor and backend listener status
+- `npm run server:daemon:logs` - tail supervisor + backend logs
+- `npm run server:bg:start` - start backend in background
+- `npm run server:bg:stop` - stop background backend
+- `npm run server:bg:status` - check if backend listens on `:4000`
+- `npm run server:bg:logs` - tail background backend logs
+- `npm run api`, `npm run start:api`, and the `api:*` scripts still work as compatibility aliases
 - `npm run build` - production Next.js build
 - `npm run build:web` - explicit frontend build command for Render
 - `npm run typecheck` - TypeScript checks

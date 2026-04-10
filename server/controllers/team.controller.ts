@@ -2,9 +2,9 @@ import crypto from "node:crypto";
 
 import { Request, Response } from "express";
 
-import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
-import { AuthRequest } from "@/api/middleware/auth";
-import { emitSocketEvent } from "@/api/socket/events";
+import { getWorkspaceSettings } from "@/server/lib/workspace-settings";
+import { AuthRequest } from "@/server/middleware/auth";
+import { emitSocketEvent } from "@/server/socket/events";
 import ActivityModel from "@/models/Activity";
 import NotificationModel from "@/models/Notification";
 import ProductModel from "@/models/Product";

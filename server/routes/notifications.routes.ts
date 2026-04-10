@@ -3,9 +3,9 @@ import { Router } from "express";
 import {
   listNotifications,
   markNotificationRead
-} from "@/api/controllers/notifications.controller";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth } from "@/api/middleware/auth";
+} from "@/server/controllers/notifications.controller";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth } from "@/server/middleware/auth";
 
 const router = Router();
 

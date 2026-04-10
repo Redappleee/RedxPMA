@@ -2,8 +2,8 @@ import { Server as HttpServer } from "node:http";
 
 import { Server } from "socket.io";
 
-import { serverEnv } from "@/api/config/env";
-import { setSocketServer } from "@/api/socket/events";
+import { serverEnv } from "@/server/config/env";
+import { setSocketServer } from "@/server/socket/events";
 
 export const initSocket = (server: HttpServer) => {
   const allowedOrigins = Array.from(new Set([serverEnv.CLIENT_URL, ...serverEnv.CLIENT_URLS]));

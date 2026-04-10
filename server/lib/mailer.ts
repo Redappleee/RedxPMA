@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-import { serverEnv } from "@/api/config/env";
+import { serverEnv } from "@/server/config/env";
 
 const hasSmtpConfig = Boolean(
   serverEnv.SMTP_HOST &&

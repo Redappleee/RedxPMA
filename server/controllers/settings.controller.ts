@@ -1,7 +1,7 @@
 import { Response } from "express";
 
-import { AuthRequest } from "@/api/middleware/auth";
-import { emitSocketEvent } from "@/api/socket/events";
+import { AuthRequest } from "@/server/middleware/auth";
+import { emitSocketEvent } from "@/server/socket/events";
 import ActivityModel from "@/models/Activity";
 import NotificationModel from "@/models/Notification";
 import SettingsModel, { SETTINGS_DOCUMENT_KEY } from "@/models/Settings";

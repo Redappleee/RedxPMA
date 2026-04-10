@@ -1,10 +1,10 @@
 import { Router } from "express";
 
-import { inviteSchema, updateUserRoleSchema } from "@/api/config/validators";
-import { deleteMember, inviteMember, listTeam, updateMemberRole } from "@/api/controllers/team.controller";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth, requireRole } from "@/api/middleware/auth";
-import { validateBody } from "@/api/middleware/validate";
+import { inviteSchema, updateUserRoleSchema } from "@/server/config/validators";
+import { deleteMember, inviteMember, listTeam, updateMemberRole } from "@/server/controllers/team.controller";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth, requireRole } from "@/server/middleware/auth";
+import { validateBody } from "@/server/middleware/validate";
 
 const router = Router();
 

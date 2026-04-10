@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import sanitizeHtml from "sanitize-html";
 
-import { getWorkspaceSettings } from "@/api/lib/workspace-settings";
-import { AuthRequest } from "@/api/middleware/auth";
-import { emitSocketEvent, emitToUser } from "@/api/socket/events";
+import { getWorkspaceSettings } from "@/server/lib/workspace-settings";
+import { AuthRequest } from "@/server/middleware/auth";
+import { emitSocketEvent, emitToUser } from "@/server/socket/events";
 import ActivityModel from "@/models/Activity";
 import NotificationModel from "@/models/Notification";
 import ProductModel from "@/models/Product";

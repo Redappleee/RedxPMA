@@ -4,7 +4,7 @@ import {
   analyticsGoalsSchema,
   analyticsPresetSchema,
   analyticsScheduleSchema
-} from "@/api/config/validators";
+} from "@/server/config/validators";
 import {
   createAnalyticsPreset,
   deleteAnalyticsPreset,
@@ -12,10 +12,10 @@ import {
   getAnalyticsOverview,
   updateAnalyticsGoals,
   updateAnalyticsSchedule
-} from "@/api/controllers/analytics.controller";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth } from "@/api/middleware/auth";
-import { validateBody } from "@/api/middleware/validate";
+} from "@/server/controllers/analytics.controller";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth } from "@/server/middleware/auth";
+import { validateBody } from "@/server/middleware/validate";
 
 const router = Router();
 

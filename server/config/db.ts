@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { serverEnv } from "@/api/config/env";
+import { serverEnv } from "@/server/config/env";
 
 let isConnected = false;
 mongoose.set("bufferCommands", false);

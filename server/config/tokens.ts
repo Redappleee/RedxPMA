@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-import { serverEnv } from "@/api/config/env";
+import { serverEnv } from "@/server/config/env";
 import { Role } from "@/types";
 
 interface TokenPayload {

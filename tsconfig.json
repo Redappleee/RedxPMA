@@ -25,7 +25,8 @@
       "@/services/*": ["./services/*"],
       "@/store/*": ["./store/*"],
       "@/models/*": ["./models/*"],
-      "@/api/*": ["./api/*"],
+      "@/server/*": ["./server/*"],
+      "@/api/*": ["./server/*"],
       "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"]
     }

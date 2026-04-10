@@ -11,7 +11,7 @@ import {
   resetPassword,
   signup,
   updateDashboardLayout
-} from "@/api/controllers/auth.controller";
+} from "@/server/controllers/auth.controller";
 import {
   dashboardLayoutSchema,
   forgotPasswordSchema,
@@ -20,10 +20,10 @@ import {
   profileUpdateSchema,
   resetPasswordSchema,
   signupSchema
-} from "@/api/config/validators";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth } from "@/api/middleware/auth";
-import { validateBody } from "@/api/middleware/validate";
+} from "@/server/config/validators";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth } from "@/server/middleware/auth";
+import { validateBody } from "@/server/middleware/validate";
 
 const router = Router();
 

@@ -1,10 +1,10 @@
 import { Router } from "express";
 
-import { settingsSchema } from "@/api/config/validators";
-import { getPublicBranding, getSettings, resetSettings, updateSettings } from "@/api/controllers/settings.controller";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth, requireRole } from "@/api/middleware/auth";
-import { validateBody } from "@/api/middleware/validate";
+import { settingsSchema } from "@/server/config/validators";
+import { getPublicBranding, getSettings, resetSettings, updateSettings } from "@/server/controllers/settings.controller";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth, requireRole } from "@/server/middleware/auth";
+import { validateBody } from "@/server/middleware/validate";
 
 const router = Router();
 

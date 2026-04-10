@@ -3,9 +3,9 @@ import path from "node:path";
 import { Router } from "express";
 import multer from "multer";
 
-import { uploadImage } from "@/api/controllers/upload.controller";
-import { asyncHandler } from "@/api/middleware/async-handler";
-import { requireAuth, requireRole } from "@/api/middleware/auth";
+import { uploadImage } from "@/server/controllers/upload.controller";
+import { asyncHandler } from "@/server/middleware/async-handler";
+import { requireAuth, requireRole } from "@/server/middleware/auth";
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, path.resolve(process.cwd(), "uploads")),

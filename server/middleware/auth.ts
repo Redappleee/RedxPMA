@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { parse } from "cookie";
 
-import { verifyAccessToken } from "@/api/config/tokens";
+import { verifyAccessToken } from "@/server/config/tokens";
 import UserModel from "@/models/User";
 import { Role } from "@/types";
 
