@@ -12,7 +12,7 @@ const objectIdSchema = z
 
 export const signupSchema = z.object({
   name: z.string().min(2).max(80),
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z
     .string()
     .min(8)
@@ -23,7 +23,7 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(8)
 });
 
@@ -60,7 +60,7 @@ export const updateUserRoleSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email()
+  email: z.string().trim().email()
 });
 
 export const resetPasswordSchema = z.object({

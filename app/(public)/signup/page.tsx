@@ -21,7 +21,12 @@ import { Label } from "@/ui/label";
 const formSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Z]/, "Must include uppercase")
+    .regex(/[a-z]/, "Must include lowercase")
+    .regex(/[0-9]/, "Must include number"),
   role: z.enum(["admin", "manager", "member"])
 });
 

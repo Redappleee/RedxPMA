@@ -70,12 +70,16 @@ const normalizeLayout = (layout: unknown): DashboardWidgetKey[] => {
 };
 
 export const signup = async (req: Request, res: Response) => {
-  const existing = await UserModel.findOne({ email: req.body.email });
+  const email = String(req.body.email).trim().toLowerCase();
+  const existing = await UserModel.findOne({ email });
   if (existing) {
     return res.status(409).json({ message: "Email already in use" });
   }
 
-  const user = await UserModel.create(req.body);
+  const user = await UserModel.create({
+    ...req.body,
+    email
+  });
   const response = buildAuthResponse(user);
   setAuthCookie(res, response.token);
 
@@ -83,7 +87,8 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  const user = await UserModel.findOne({ email: req.body.email });
+  const email = String(req.body.email).trim().toLowerCase();
+  const user = await UserModel.findOne({ email });
 
   if (!user || !(await user.comparePassword(req.body.password))) {
     return res.status(401).json({ message: "Invalid credentials" });
@@ -234,7 +239,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Password reset email service is not configured" });
   }
 
-  const user = await UserModel.findOne({ email: req.body.email });
+  const email = String(req.body.email).trim().toLowerCase();
+  const user = await UserModel.findOne({ email });
 
   if (!user) {
     return res.json({
