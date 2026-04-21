@@ -2,6 +2,8 @@ import { apiClient } from "@/lib/api-client";
 import { DashboardWidgetKey } from "@/types/dashboard";
 import { AuthResponse, IUser } from "@/types";
 
+const AUTH_REQUEST_TIMEOUT_MS = 30_000;
+
 export interface LoginPayload {
   email: string;
   password: string;
@@ -19,15 +21,21 @@ export interface GoogleAuthPayload {
 
 export const authService = {
   async login(payload: LoginPayload) {
-    const { data } = await apiClient.post<AuthResponse>("/auth/login", payload);
+    const { data } = await apiClient.post<AuthResponse>("/auth/login", payload, {
+      timeout: AUTH_REQUEST_TIMEOUT_MS
+    });
     return data;
   },
   async signup(payload: SignupPayload) {
-    const { data } = await apiClient.post<AuthResponse>("/auth/signup", payload);
+    const { data } = await apiClient.post<AuthResponse>("/auth/signup", payload, {
+      timeout: AUTH_REQUEST_TIMEOUT_MS
+    });
     return data;
   },
   async googleAuth(payload: GoogleAuthPayload) {
-    const { data } = await apiClient.post<AuthResponse>("/auth/google", payload);
+    const { data } = await apiClient.post<AuthResponse>("/auth/google", payload, {
+      timeout: AUTH_REQUEST_TIMEOUT_MS
+    });
     return data;
   },
   async me() {
@@ -51,6 +59,8 @@ export const authService = {
   async forgotPassword(email: string) {
     const { data } = await apiClient.post<{ message: string }>("/auth/forgot-password", {
       email
+    }, {
+      timeout: AUTH_REQUEST_TIMEOUT_MS
     });
     return data;
   },
@@ -58,6 +68,8 @@ export const authService = {
     const { data } = await apiClient.post<{ message: string }>("/auth/reset-password", {
       token,
       password
+    }, {
+      timeout: AUTH_REQUEST_TIMEOUT_MS
     });
     return data;
   },

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:server:nowatch\" \"npm run dev:web\"",
     "build:web": "next build",
-    "start:web": "next start -p ${PORT:-3000}",
+    "start:web": "next start -p ${PORT:-3050}",
     "start:server": "tsx --require tsconfig-paths/register server/server.ts",
     "start:api": "npm run start:server",
     "dev:web": "next dev -p 3005",

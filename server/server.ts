@@ -22,8 +22,22 @@ import { initSocket } from "@/server/socket";
 
 const app = express();
 const httpServer = createServer(app);
-const allowedOrigins = Array.from(new Set([serverEnv.CLIENT_URL, ...serverEnv.CLIENT_URLS]));
+const normalizeOrigin = (origin: string) => origin.replace(/\/$/, "");
+const allowedOrigins = Array.from(new Set([serverEnv.CLIENT_URL, ...serverEnv.CLIENT_URLS].map(normalizeOrigin)));
 const isDevelopment = serverEnv.NODE_ENV === "development";
+
+const isAllowedVercelPreviewOrigin = (origin: string) => {
+  try {
+    const { hostname, protocol } = new URL(origin);
+    return (
+      protocol === "https:" &&
+      hostname.startsWith("redx-pma-netk-") &&
+      hostname.endsWith("-redappleees-projects.vercel.app")
+    );
+  } catch {
+    return false;
+  }
+};
 
 const uploadsPath = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsPath)) {
@@ -38,7 +52,9 @@ app.use(
         return;
       }
 
-      if (!origin || allowedOrigins.includes(origin)) {
+      const normalizedOrigin = origin ? normalizeOrigin(origin) : origin;
+
+      if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin) || isAllowedVercelPreviewOrigin(normalizedOrigin)) {
         callback(null, true);
         return;
       }

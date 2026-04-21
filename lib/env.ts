@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const defaults = {
-  NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+  NEXT_PUBLIC_APP_URL: "http://localhost:3050",
   NEXT_PUBLIC_API_URL: "http://localhost:4000/api"
 } as const;
 

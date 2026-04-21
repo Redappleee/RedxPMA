@@ -41,13 +41,13 @@ cp .env.example .env
 3. Configure Google OAuth (optional)
 
 - Create a Web OAuth client in Google Cloud Console
-- Set Authorized JavaScript origin to `http://localhost:3000`
+- Set Authorized JavaScript origin to `http://localhost:3050`
 - Set both `NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_ID` in `.env`
 
 If you run frontend on a non-default port (for example `3005`), set:
 
 - `CLIENT_URL=http://localhost:3005`
-- `CLIENT_URLS=http://localhost:3005,http://localhost:3000`
+- `CLIENT_URLS=http://localhost:3005,http://localhost:3050`
 
 4. Configure SMTP for password reset emails
 

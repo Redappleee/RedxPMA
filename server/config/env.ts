@@ -5,7 +5,7 @@ dotenv.config();
 
 const clientUrlsSchema = z
   .string()
-  .default("http://localhost:3005,http://localhost:3000")
+  .default("http://localhost:3005,http://localhost:3050")
   .transform((value) =>
     value
       .split(",")
