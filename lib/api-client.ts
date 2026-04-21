@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { env } from "@/lib/env";
+import { useAuthStore } from "@/store/auth-store";
 
 const normalizeApiBaseUrl = (value: string) => {
   try {
@@ -18,6 +19,16 @@ export const apiClient = axios.create({
   baseURL: normalizeApiBaseUrl(env.NEXT_PUBLIC_API_URL),
   withCredentials: true,
   timeout: 10000
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().token;
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
 });
 
 apiClient.interceptors.response.use(
