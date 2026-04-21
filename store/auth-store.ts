@@ -35,17 +35,29 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       hydrated: false,
       setAuth: (user, token) => {
-        if (token) {
-          setFrontendAuthCookie(token);
-        }
+        set((state) => {
+          const nextToken = token === undefined ? state.token : token;
 
-        set({ user, token: token ?? null });
+          if (nextToken) {
+            setFrontendAuthCookie(nextToken);
+          } else {
+            clearFrontendAuthCookie();
+          }
+
+          return { user, token: nextToken };
+        });
       },
       clearAuth: () => {
         clearFrontendAuthCookie();
         set({ user: null, token: null });
       },
-      setHydrated: () => set({ hydrated: true })
+      setHydrated: () => set((state) => {
+        if (state.token) {
+          setFrontendAuthCookie(state.token);
+        }
+
+        return { hydrated: true };
+      })
     }),
     {
       name: "nexuspm-auth",

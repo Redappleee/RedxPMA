@@ -7,28 +7,28 @@ import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth-store";
 
 export const useAuth = () => {
-  const { user, setAuth, clearAuth, hydrated } = useAuthStore();
+  const { user, token, setAuth, clearAuth, hydrated } = useAuthStore();
 
   const query = useQuery({
     queryKey: ["auth", "me"],
     queryFn: authService.me,
-    enabled: hydrated,
+    enabled: hydrated && Boolean(token),
     retry: false
   });
 
   useEffect(() => {
     if (query.data) {
-      setAuth(query.data);
+      setAuth(query.data, token);
     }
 
     if (query.error) {
       clearAuth();
     }
-  }, [query.data, query.error, setAuth, clearAuth]);
+  }, [query.data, query.error, setAuth, clearAuth, token]);
 
   return {
     user,
-    loading: query.isLoading || !hydrated,
+    loading: !hydrated || (Boolean(token) && query.isLoading),
     isAuthenticated: Boolean(user)
   };
 };
