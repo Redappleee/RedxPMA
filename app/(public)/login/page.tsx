@@ -2,9 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,7 +24,6 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
   const { setAuth } = useAuthStore();
   const [message, setMessage] = useState<string | null>(null);
 
@@ -47,7 +44,7 @@ export default function LoginPage() {
     mutationFn: authService.login,
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
-      router.push(redirect as Route);
+      window.location.assign(redirect);
     },
     onError: (error) => setMessage(error.message)
   });

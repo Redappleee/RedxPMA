@@ -3,7 +3,6 @@
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { useMutation } from "@tanstack/react-query";
 import { Route } from "next";
-import { useRouter } from "next/navigation";
 
 import { env } from "@/lib/env";
 import { authService } from "@/services/auth.service";
@@ -16,14 +15,13 @@ interface GoogleAuthButtonProps {
 }
 
 export const GoogleAuthButton = ({ role, redirectTo = "/dashboard", onError }: GoogleAuthButtonProps) => {
-  const router = useRouter();
   const { setAuth } = useAuthStore();
 
   const googleMutation = useMutation({
     mutationFn: authService.googleAuth,
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
-      router.push(redirectTo as Route);
+      window.location.assign(redirectTo as Route);
     },
     onError: (error) => onError?.(error.message)
   });
